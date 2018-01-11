@@ -1,20 +1,12 @@
 import os
 import argparse
 from itertools import count
-import termcolor
-import pickle
 import tensorflow as tf
 import densenet
 import matplotlib.pyplot as plt
-import numpy as np
-
-
-def success(str):
-  return termcolor.colored(str, 'green')
-
-
-def warning(str):
-  return termcolor.colored(str, 'yellow')
+import cifar10_dataset as cifar10
+from utils import success, warning
+import metrics
 
 
 def make_parser():
@@ -28,75 +20,17 @@ def make_parser():
   return parser
 
 
-def load_file(path):
-  with open(path, 'rb') as f:
-    dict = pickle.load(f, encoding='bytes')
-    return dict[b'data'], dict[b'labels']
-
-
-def preprocessing(data, labels):
-  data = tf.reshape(data, (3, 32 * 32))
-  data = tf.transpose(data)
-  data = tf.reshape(data, (32, 32, 3))
-  data /= 255
-
-  labels = tf.to_int64(labels)
-
-  return data, labels
-
-
-def make_dataset(path):
-  train_data_batches = []
-  train_labels_batches = []
-
-  for i in range(1, 6):
-    data, labels = load_file(os.path.join(path, 'data_batch_{}'.format(i)))
-    train_data_batches.append(data)
-    train_labels_batches.append(labels)
-
-  train_data_batches = np.array(train_data_batches)
-  train_labels_batches = np.array(train_labels_batches)
-  train_ds = tf.data.Dataset.from_tensor_slices((train_data_batches,
-                                                 train_labels_batches))
-  train_ds = train_ds.flat_map(
-      lambda data, labels: tf.data.Dataset.from_tensor_slices((data, labels)))
-
-  test_data, test_labels = load_file(os.path.join(path, 'test_batch'))
-  test_ds = tf.data.Dataset.from_tensor_slices((test_data, test_labels))
-
-  train_ds = train_ds.map(preprocessing)
-  test_ds = test_ds.map(preprocessing)
-
-  return train_ds, test_ds
-
-
-def make_loss(logits, labels):
-  logits = tf.squeeze(logits, [1, 2])
-  loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
-      logits=logits, labels=labels)
-  loss = tf.reduce_mean(loss)
-
-  return loss
-
-
-def make_accuracy(logits, labels):
-  logits = tf.squeeze(logits, [1, 2])
-  y_hat = tf.argmax(logits, -1)
-  eq = tf.equal(y_hat, labels)
-
-  return tf.reduce_mean(tf.to_float(eq))
-
-
 def main():
   args = make_parser().parse_args()
 
   # epochs = tf.get_variable('epochs', [], tf.int64, trainable=False)
-  global_step = tf.get_variable('global_step', [], tf.int64, trainable=False)
-  training = tf.get_variable('training', [], tf.bool, trainable=False)
+  global_step = tf.get_variable('global_step', initializer=0, trainable=False)
+  training = tf.get_variable('training', initializer=False, trainable=False)
 
-  train_ds, test_ds = make_dataset(args.dataset_path)
-  train_ds, test_ds = (train_ds.batch(args.batch_size),
-                       test_ds.batch(args.batch_size))
+  with tf.name_scope('data_loading'):
+    train_ds, test_ds = cifar10.make_dataset(args.dataset_path)
+    train_ds, test_ds = (train_ds.batch(args.batch_size),
+                         test_ds.batch(args.batch_size))
 
   iter = tf.data.Iterator.from_structure((tf.float32, tf.int64),
                                          ((None, 32, 32, 3), (None)))
@@ -109,8 +43,8 @@ def main():
 
   x, y = iter.get_next()
   logits = densenet.densenet(x, training=training)
-  loss = make_loss(logits=logits, labels=y)
-  accuracy = make_accuracy(logits=logits, labels=y)
+  loss = metrics.loss(logits=logits, labels=y)
+  accuracy = metrics.accuracy(logits=logits, labels=y)
   train_step = tf.train.AdamOptimizer(args.learning_rate).minimize(
       loss, global_step=global_step)
 
