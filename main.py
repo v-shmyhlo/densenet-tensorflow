@@ -53,9 +53,10 @@ def main():
       os.path.join(args.log_path, 'test'),
       sess.graph,
   ) as test_writer:
-    if tf.train.latest_checkpoint(os.path.dirname(args.save_path)):
+    restore_path = tf.train.latest_checkpoint(args.save_path)
+    if restore_path:
       print(warning('Restoring from checkpoint'))
-      saver.restore(sess, args.save_path)
+      saver.restore(sess, restore_path)
     else:
       print(warning('Initializing'))
       sess.run(tf.global_variables_initializer())
@@ -79,7 +80,10 @@ def main():
 
         test_writer.add_summary(summ, step)
         test_writer.flush()
-        save_path = saver.save(sess, args.save_path, write_meta_graph=False)
+        save_path = saver.save(
+            sess,
+            os.path.join(args.save_path, 'model.ckpt'),
+            write_meta_graph=False)
         print(warning('model saved: {}'.format(save_path)))
 
 
