@@ -6,10 +6,10 @@ import densenet
 import cifar10_dataset as cifar10
 from utils import success, warning, log_args
 import metrics
+import objectives
 
 
 def make_parser():
-  # TODO: log arguments
   parser = argparse.ArgumentParser()
   parser.add_argument('--dataset-path', type=str, required=True)
   parser.add_argument('--batch-size', type=int, default=32)
@@ -21,8 +21,6 @@ def make_parser():
 
 
 def main():
-  # TODO: add weight initializers
-
   args = make_parser().parse_args()
   log_args(args)
 
@@ -36,21 +34,33 @@ def main():
 
   iter = tf.data.Iterator.from_structure((tf.float32, tf.int64),
                                          ((None, 32, 32, 3), (None)))
-  train_init = tf.group(training.assign(True), iter.make_initializer(train_ds))
-  test_init = tf.group(training.assign(False), iter.make_initializer(test_ds))
 
   x, y = iter.get_next()
   logits = densenet.densenet(x, training=training)
-  loss = metrics.loss(logits=logits, labels=y)
-  accuracy = metrics.accuracy(logits=logits, labels=y)
+  loss, update_loss = metrics.loss(logits=logits, labels=y)
+  accuracy, update_accuracy = metrics.accuracy(logits=logits, labels=y)
+
   train_step = tf.train.AdamOptimizer(args.learning_rate).minimize(
-      loss, global_step=global_step)
+      objectives.loss(logits=logits, labels=y),
+      global_step=global_step,
+  )
 
   with tf.name_scope('summary'):
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('accuracy', accuracy)
   merged = tf.summary.merge_all()
   saver = tf.train.Saver()
+
+  train_init = tf.group(
+      training.assign(True),
+      iter.make_initializer(train_ds),
+      tf.local_variables_initializer(),
+  )
+  test_init = tf.group(
+      training.assign(False),
+      iter.make_initializer(test_ds),
+      tf.local_variables_initializer(),
+  )
 
   with tf.Session() as sess, tf.summary.FileWriter(
       os.path.join(args.log_path, 'train'),
@@ -68,30 +78,42 @@ def main():
       sess.run(tf.global_variables_initializer())
 
     for epoch in range(args.epochs):
+      print(success('epoch: {}, step: {}'.format(epoch, step)))
+
+      sess.run(train_init)
       try:
-        sess.run(train_init)
-
         for _ in count():
-          step, _ = sess.run([global_step, train_step])
+          _, step = sess.run([(train_step, update_loss, update_accuracy),
+                              global_step])
           print(step, end='\r')
-
       except tf.errors.OutOfRangeError:
-        sess.run(test_init)
+        pass
 
-        step, summ, l, a = sess.run([global_step, merged, loss, accuracy])
+      l, a, summary = sess.run([loss, accuracy, merged])
+      print(
+          success('(train) loss: {:.4f}, accuracy: {:.2f}'.format(l, a * 100)))
+      train_writer.add_summary(summary, step)
+      train_writer.flush()
 
-        print(
-            success(
-                'epoch: {}, step: {}, loss: {:.4f}, accuracy: {:.2f}'.format(
-                    epoch, step, l, a * 100)))
+      sess.run(test_init)
+      try:
+        for _ in count():
+          _, step = sess.run([(update_loss, update_accuracy), global_step])
+          print(step, end='\r')
+      except tf.errors.OutOfRangeError:
+        pass
 
-        test_writer.add_summary(summ, step)
-        test_writer.flush()
-        save_path = saver.save(
-            sess,
-            os.path.join(args.save_path, 'model.ckpt'),
-            write_meta_graph=False)
-        print(warning('model saved: {}'.format(save_path)))
+      l, a, summary = sess.run([loss, accuracy, merged])
+      print(
+          success('(test) loss: {:.4f}, accuracy: {:.2f}'.format(l, a * 100)))
+      test_writer.add_summary(summary, step)
+      test_writer.flush()
+
+      save_path = saver.save(
+          sess,
+          os.path.join(args.save_path, 'model.ckpt'),
+          write_meta_graph=False)
+      print(warning('model saved: {}'.format(save_path)))
 
 
 if __name__ == '__main__':
