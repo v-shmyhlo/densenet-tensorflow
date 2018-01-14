@@ -4,7 +4,7 @@ from itertools import count
 import tensorflow as tf
 import densenet
 import cifar10_dataset as cifar10
-from utils import success, warning
+from utils import success, warning, log_args
 import metrics
 
 
@@ -24,6 +24,7 @@ def main():
   # TODO: add weight initializers
 
   args = make_parser().parse_args()
+  log_args(args)
 
   global_step = tf.get_variable('global_step', initializer=0, trainable=False)
   training = tf.get_variable('training', initializer=False, trainable=False)
