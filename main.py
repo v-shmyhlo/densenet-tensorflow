@@ -23,7 +23,6 @@ def make_parser():
 def main():
   args = make_parser().parse_args()
 
-  # epochs = tf.get_variable('epochs', [], tf.int64, trainable=False)
   global_step = tf.get_variable('global_step', initializer=0, trainable=False)
   training = tf.get_variable('training', initializer=False, trainable=False)
 
@@ -65,7 +64,6 @@ def main():
       print(warning('Initializing'))
       sess.run(tf.global_variables_initializer())
 
-    # for epoch in range(sess.run(epochs), args.epochs):
     for epoch in range(args.epochs):
       try:
         sess.run(train_init)
