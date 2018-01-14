@@ -76,7 +76,7 @@ def input(x, filters, name='input'):
 
 def output(x, name='output'):
   with tf.name_scope(name):
-    x = tf.reduce_mean(x, (1, 2), keepdims=True)
+    x = tf.reduce_mean(x, (1, 2), keep_dims=True)
     x = tf.layers.conv2d(x, 1000, 1, 1, padding='same')
 
     return x
