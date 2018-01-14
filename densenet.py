@@ -6,7 +6,11 @@ def kernel_initializer():
       factor=2.0, mode='FAN_IN', uniform=False)
 
 
-def composite_function(x, filters, training, name='composite_function'):
+def composite_function(x,
+                       filters,
+                       dropout,
+                       training,
+                       name='composite_function'):
   with tf.name_scope(name):
     x = tf.layers.batch_normalization(x, training=training)
     x = tf.nn.relu(x)
@@ -15,12 +19,14 @@ def composite_function(x, filters, training, name='composite_function'):
         filters, (3, 3), (1, 1),
         padding='same',
         kernel_initializer=kernel_initializer())
+    x = tf.layers.dropout(x, rate=dropout)
 
     return x
 
 
 def bottleneck_composite_function(x,
                                   filters,
+                                  dropout,
                                   training,
                                   name='bottleneck_composite_function'):
   with tf.name_scope(name):
@@ -31,6 +37,7 @@ def bottleneck_composite_function(x,
         filters * 4, (1, 1), (1, 1),
         padding='same',
         kernel_initializer=kernel_initializer())
+    x = tf.layers.dropout(x, rate=dropout)
 
     x = tf.layers.batch_normalization(x, training=training)
     x = tf.nn.relu(x)
@@ -39,6 +46,7 @@ def bottleneck_composite_function(x,
         filters, (3, 3), (1, 1),
         padding='same',
         kernel_initializer=kernel_initializer())
+    x = tf.layers.dropout(x, rate=dropout)
 
     return x
 
@@ -47,6 +55,7 @@ def dense_block(x,
                 layers,
                 growth_rate,
                 bottleneck,
+                dropout,
                 training,
                 name='dense_block'):
   with tf.name_scope(name):
@@ -59,12 +68,14 @@ def dense_block(x,
         y = bottleneck_composite_function(
             x,
             growth_rate,
+            dropout=dropout,
             training=training,
             name='bottleneck_composite_function_{}'.format(i))
       else:
         y = composite_function(
             x,
             growth_rate,
+            dropout=dropout,
             training=training,
             name='composite_function_{}'.format(i))
 
@@ -73,7 +84,11 @@ def dense_block(x,
     return x
 
 
-def transition_layer(x, compression_factor, training, name='transition_layer'):
+def transition_layer(x,
+                     compression_factor,
+                     dropout,
+                     training,
+                     name='transition_layer'):
   with tf.name_scope(name):
     filters = int(x.shape[-1].value * compression_factor)
 
@@ -83,6 +98,7 @@ def transition_layer(x, compression_factor, training, name='transition_layer'):
         filters, (1, 1), (1, 1),
         padding='same',
         kernel_initializer=kernel_initializer())
+    x = tf.layers.dropout(x, rate=dropout)
     x = tf.layers.average_pooling2d(x, (2, 2), (2, 2), padding='same')
 
     return x
@@ -106,6 +122,7 @@ def output(x, name='output'):
 def densenet(x,
              bottleneck=True,
              compression_factor=0.5,
+             dropout=0.2,
              growth_rate=12,
              training=False):
   with tf.name_scope('densenet'):
@@ -119,11 +136,13 @@ def densenet(x,
         layers=40,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
+        dropout=dropout,
         training=training,
         name='dense_block_1')
     x = transition_layer(
         x,
         compression_factor=compression_factor,
+        dropout=dropout,
         training=training,
         name='transition_layer_1')
     x = dense_block(
@@ -131,11 +150,13 @@ def densenet(x,
         layers=40,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
+        dropout=dropout,
         training=training,
         name='dense_block_2')
     x = transition_layer(
         x,
         compression_factor=compression_factor,
+        dropout=dropout,
         training=training,
         name='transition_layer_2')
     x = dense_block(
@@ -143,6 +164,7 @@ def densenet(x,
         layers=40,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
+        dropout=dropout,
         training=training,
         name='dense_block_3')
 
