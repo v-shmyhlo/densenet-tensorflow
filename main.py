@@ -9,6 +9,7 @@ import metrics
 
 
 def make_parser():
+  # TODO: log arguments
   parser = argparse.ArgumentParser()
   parser.add_argument('--dataset-path', type=str, required=True)
   parser.add_argument('--batch-size', type=int, default=32)
@@ -32,12 +33,8 @@ def main():
 
   iter = tf.data.Iterator.from_structure((tf.float32, tf.int64),
                                          ((None, 32, 32, 3), (None)))
-  train_init = tf.group(
-      [training.assign(True),
-       iter.make_initializer(train_ds)])
-  test_init = tf.group(
-      [training.assign(False),
-       iter.make_initializer(test_ds)])
+  train_init = tf.group(training.assign(True), iter.make_initializer(train_ds))
+  test_init = tf.group(training.assign(False), iter.make_initializer(test_ds))
 
   x, y = iter.get_next()
   logits = densenet.densenet(x, training=training)
