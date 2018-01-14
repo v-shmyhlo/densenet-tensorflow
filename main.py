@@ -78,8 +78,6 @@ def main():
       sess.run(tf.global_variables_initializer())
 
     for epoch in range(args.epochs):
-      print(success('epoch: {}, step: {}'.format(epoch, step)))
-
       sess.run(train_init)
       try:
         for _ in count():
@@ -88,6 +86,8 @@ def main():
           print(step, end='\r')
       except tf.errors.OutOfRangeError:
         pass
+
+      print(success('epoch: {}, step: {}'.format(epoch, step)))
 
       l, a, summary = sess.run([loss, accuracy, merged])
       print(
