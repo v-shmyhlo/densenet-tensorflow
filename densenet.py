@@ -1,11 +1,20 @@
 import tensorflow as tf
 
 
+def kernel_initializer():
+  return tf.contrib.layers.variance_scaling_initializer(
+      factor=2.0, mode='FAN_IN', uniform=False)
+
+
 def composite_function(x, filters, training, name='composite_function'):
   with tf.name_scope(name):
     x = tf.layers.batch_normalization(x, training=training)
     x = tf.nn.relu(x)
-    x = tf.layers.conv2d(x, filters, (3, 3), (1, 1), padding='same')
+    x = tf.layers.conv2d(
+        x,
+        filters, (3, 3), (1, 1),
+        padding='same',
+        kernel_initializer=kernel_initializer())
 
     return x
 
@@ -17,11 +26,19 @@ def bottleneck_composite_function(x,
   with tf.name_scope(name):
     x = tf.layers.batch_normalization(x, training=training)
     x = tf.nn.relu(x)
-    x = tf.layers.conv2d(x, filters * 4, (1, 1), (1, 1), padding='same')
+    x = tf.layers.conv2d(
+        x,
+        filters * 4, (1, 1), (1, 1),
+        padding='same',
+        kernel_initializer=kernel_initializer())
 
     x = tf.layers.batch_normalization(x, training=training)
     x = tf.nn.relu(x)
-    x = tf.layers.conv2d(x, filters, (3, 3), (1, 1), padding='same')
+    x = tf.layers.conv2d(
+        x,
+        filters, (3, 3), (1, 1),
+        padding='same',
+        kernel_initializer=kernel_initializer())
 
     return x
 
@@ -61,7 +78,11 @@ def transition_layer(x, compression_factor, training, name='transition_layer'):
     filters = int(x.shape[-1].value * compression_factor)
 
     x = tf.layers.batch_normalization(x, training=training)
-    x = tf.layers.conv2d(x, filters, (1, 1), (1, 1), padding='same')
+    x = tf.layers.conv2d(
+        x,
+        filters, (1, 1), (1, 1),
+        padding='same',
+        kernel_initializer=kernel_initializer())
     x = tf.layers.average_pooling2d(x, (2, 2), (2, 2), padding='same')
 
     return x

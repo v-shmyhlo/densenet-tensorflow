@@ -21,6 +21,8 @@ def make_parser():
 
 
 def main():
+  # TODO: add weight initializers
+
   args = make_parser().parse_args()
 
   global_step = tf.get_variable('global_step', initializer=0, trainable=False)
@@ -50,6 +52,9 @@ def main():
   saver = tf.train.Saver()
 
   with tf.Session() as sess, tf.summary.FileWriter(
+      os.path.join(args.log_path, 'train'),
+      sess.graph,
+  ) as train_writer, tf.summary.FileWriter(
       os.path.join(args.log_path, 'test'),
       sess.graph,
   ) as test_writer:
@@ -75,8 +80,9 @@ def main():
         step, summ, l, a = sess.run([global_step, merged, loss, accuracy])
 
         print(
-            success('epoch: {}, step: {}, loss: {}, accuracy: {}'.format(
-                epoch, step, l, a * 100)))
+            success(
+                'epoch: {}, step: {}, loss: {:.4f}, accuracy: {:.2f}'.format(
+                    epoch, step, l, a * 100)))
 
         test_writer.add_summary(summ, step)
         test_writer.flush()
