@@ -1,0 +1,4 @@
+termcolor
+numpy
+tensorflow-gpu
+tensorflow-tensorboard

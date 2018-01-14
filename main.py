@@ -3,7 +3,6 @@ import argparse
 from itertools import count
 import tensorflow as tf
 import densenet
-import matplotlib.pyplot as plt
 import cifar10_dataset as cifar10
 from utils import success, warning
 import metrics
