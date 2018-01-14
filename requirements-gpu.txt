@@ -1,4 +1,4 @@
 termcolor
 numpy
-tensorflow-gpu
+tensorflow-gpu>=1.4
 tensorflow-tensorboard
