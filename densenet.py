@@ -116,7 +116,7 @@ def densenet(x,
 
     x = dense_block(
         x,
-        layers=16,
+        layers=40,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
         training=training,
@@ -128,7 +128,7 @@ def densenet(x,
         name='transition_layer_1')
     x = dense_block(
         x,
-        layers=16,
+        layers=40,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
         training=training,
@@ -140,7 +140,7 @@ def densenet(x,
         name='transition_layer_2')
     x = dense_block(
         x,
-        layers=16,
+        layers=40,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
         training=training,
