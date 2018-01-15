@@ -18,6 +18,7 @@ def make_parser():
   parser.add_argument('--log-path', type=str, default='./tf_log')
   parser.add_argument('--save-path', type=str, default='./weights')
   parser.add_argument('--dropout', type=float, default=0.2)
+  parser.add_argument('--block-depth', type=int, default=10)
   return parser
 
 
@@ -39,7 +40,8 @@ def main():
                                          ((None, 32, 32, 3), (None)))
 
   x, y = iter.get_next()
-  logits = densenet.densenet(x, dropout=args.dropout, training=training)
+  logits = densenet.densenet(
+      x, dropout=args.dropout, block_depth=args.block_depth, training=training)
   loss, update_loss = metrics.loss(logits=logits, labels=y)
   accuracy, update_accuracy = metrics.accuracy(logits=logits, labels=y)
 

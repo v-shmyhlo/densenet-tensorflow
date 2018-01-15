@@ -121,6 +121,7 @@ def output(x, name='output'):
 
 def densenet(x,
              dropout,
+             block_depth,
              bottleneck=True,
              compression_factor=0.5,
              growth_rate=12,
@@ -133,7 +134,7 @@ def densenet(x,
 
     x = dense_block(
         x,
-        layers=10,
+        layers=block_depth,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
         dropout=dropout,
@@ -147,7 +148,7 @@ def densenet(x,
         name='transition_layer_1')
     x = dense_block(
         x,
-        layers=10,
+        layers=block_depth,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
         dropout=dropout,
@@ -161,7 +162,7 @@ def densenet(x,
         name='transition_layer_2')
     x = dense_block(
         x,
-        layers=10,
+        layers=block_depth,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
         dropout=dropout,
