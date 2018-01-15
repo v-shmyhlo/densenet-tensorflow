@@ -120,9 +120,9 @@ def output(x, name='output'):
 
 
 def densenet(x,
+             dropout,
              bottleneck=True,
              compression_factor=0.5,
-             dropout=0.2,
              growth_rate=12,
              training=False):
   with tf.name_scope('densenet'):
@@ -133,7 +133,7 @@ def densenet(x,
 
     x = dense_block(
         x,
-        layers=40,
+        layers=10,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
         dropout=dropout,
@@ -147,7 +147,7 @@ def densenet(x,
         name='transition_layer_1')
     x = dense_block(
         x,
-        layers=40,
+        layers=10,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
         dropout=dropout,
@@ -161,7 +161,7 @@ def densenet(x,
         name='transition_layer_2')
     x = dense_block(
         x,
-        layers=40,
+        layers=10,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
         dropout=dropout,
