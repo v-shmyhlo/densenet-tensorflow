@@ -120,11 +120,11 @@ def output(x, name='output'):
 
 
 def densenet(x,
-             dropout,
              block_depth,
+             growth_rate,
+             compression_factor,
+             dropout,
              bottleneck=True,
-             compression_factor=0.5,
-             growth_rate=12,
              training=False):
   with tf.name_scope('densenet'):
     if bottleneck and compression_factor < 1:

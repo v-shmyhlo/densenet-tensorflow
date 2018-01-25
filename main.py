@@ -13,7 +13,9 @@ def make_parser():
   parser = argparse.ArgumentParser()
   parser.add_argument('--dataset-path', type=str, required=True)
   parser.add_argument('--batch-size', type=int, default=32)
+  parser.add_argument('--growth-rate', type=int, default=12)
   parser.add_argument('--epochs', type=int, default=10)
+  parser.add_argument('--compression-factor', type=float, default=0.5)
   parser.add_argument('--learning-rate', type=float, default=0.001)
   parser.add_argument('--log-path', type=str, default='./tf_log')
   parser.add_argument('--save-path', type=str, default='./weights')
@@ -41,7 +43,12 @@ def main():
 
   x, y = iter.get_next()
   logits = densenet.densenet(
-      x, dropout=args.dropout, block_depth=args.block_depth, training=training)
+      x,
+      block_depth=args.block_depth,
+      growth_rate=args.growth_rate,
+      compression_factor=args.compression_factor,
+      dropout=args.dropout,
+      training=training)
   loss, update_loss = metrics.loss(logits=logits, labels=y)
   accuracy, update_accuracy = metrics.accuracy(logits=logits, labels=y)
 
