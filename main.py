@@ -56,7 +56,8 @@ def main():
   accuracy, update_accuracy = metrics.accuracy(logits=logits, labels=y)
 
   train_step = tf.train.AdamOptimizer(args.learning_rate).minimize(
-      objectives.loss(logits=logits, labels=y),
+      objectives.loss(logits=logits, labels=y) +
+      tf.losses.get_regularization_loss(),
       global_step=global_step,
   )
 
