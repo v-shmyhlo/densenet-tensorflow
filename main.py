@@ -4,7 +4,7 @@ from itertools import count
 import tensorflow as tf
 import densenet
 import cifar10_dataset as cifar10
-from utils import success, warning, log_args
+from utils import success, warning, danger, log_args
 import metrics
 import objectives
 
@@ -16,16 +16,18 @@ def make_parser():
   parser.add_argument('--growth-rate', type=int, default=12)
   parser.add_argument('--epochs', type=int, default=10)
   parser.add_argument('--compression-factor', type=float, default=0.5)
-  parser.add_argument('--learning-rate', type=float, default=0.001)
+  parser.add_argument('--learning-rate', type=float, default=1e-3)
   parser.add_argument('--log-path', type=str, default='./tf_log')
   parser.add_argument('--save-path', type=str, default='./weights')
   parser.add_argument('--dropout', type=float, default=0.2)
   parser.add_argument('--block-depth', type=int, default=10)
+  parser.add_argument('--weight-decay', type=float, default=1e-4)
   return parser
 
 
 def main():
   # TODO: should not increment global_step on test set
+  # TODO: weight decay
 
   args = make_parser().parse_args()
   log_args(args)
@@ -48,6 +50,7 @@ def main():
       growth_rate=args.growth_rate,
       compression_factor=args.compression_factor,
       dropout=args.dropout,
+      weight_decay=args.weight_decay,
       training=training)
   loss, update_loss = metrics.loss(logits=logits, labels=y)
   accuracy, update_accuracy = metrics.accuracy(logits=logits, labels=y)
@@ -111,7 +114,7 @@ def main():
       try:
         for _ in count():
           _, step = sess.run([(update_loss, update_accuracy), global_step])
-          print(step, end='\r')
+          print(danger(step), end='\r')
       except tf.errors.OutOfRangeError:
         pass
 
