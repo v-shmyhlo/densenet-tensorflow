@@ -17,7 +17,7 @@ def composite_function(x,
         padding='same',
         kernel_initializer=initializer,
         kernel_regularizer=regularizer)
-    x = tf.layers.dropout(x, rate=dropout)
+    x = tf.layers.dropout(x, rate=dropout, training=training)
 
     return x
 
@@ -38,7 +38,7 @@ def bottleneck_composite_function(x,
         padding='same',
         kernel_initializer=initializer,
         kernel_regularizer=regularizer)
-    x = tf.layers.dropout(x, rate=dropout)
+    x = tf.layers.dropout(x, rate=dropout, training=training)
 
     x = tf.layers.batch_normalization(x, training=training)
     x = tf.nn.relu(x)
@@ -48,7 +48,7 @@ def bottleneck_composite_function(x,
         padding='same',
         kernel_initializer=initializer,
         kernel_regularizer=regularizer)
-    x = tf.layers.dropout(x, rate=dropout)
+    x = tf.layers.dropout(x, rate=dropout, training=training)
 
     return x
 
@@ -109,7 +109,7 @@ def transition_layer(x,
         padding='same',
         kernel_initializer=initializer,
         kernel_regularizer=regularizer)
-    x = tf.layers.dropout(x, rate=dropout)
+    x = tf.layers.dropout(x, rate=dropout, training=training)
     x = tf.layers.average_pooling2d(x, (2, 2), (2, 2), padding='same')
 
     return x
