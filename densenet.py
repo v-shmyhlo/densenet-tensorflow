@@ -1,14 +1,10 @@
 import tensorflow as tf
 
 
-def kernel_initializer():
-  return tf.contrib.layers.variance_scaling_initializer(
-      factor=2.0, mode='FAN_IN', uniform=False)
-
-
 def composite_function(x,
                        filters,
                        dropout,
+                       initializer,
                        regularizer,
                        training,
                        name='composite_function'):
@@ -19,7 +15,7 @@ def composite_function(x,
         x,
         filters, (3, 3), (1, 1),
         padding='same',
-        kernel_initializer=kernel_initializer(),
+        kernel_initializer=initializer,
         kernel_regularizer=regularizer)
     x = tf.layers.dropout(x, rate=dropout)
 
@@ -29,6 +25,7 @@ def composite_function(x,
 def bottleneck_composite_function(x,
                                   filters,
                                   dropout,
+                                  initializer,
                                   regularizer,
                                   training,
                                   name='bottleneck_composite_function'):
@@ -39,7 +36,7 @@ def bottleneck_composite_function(x,
         x,
         filters * 4, (1, 1), (1, 1),
         padding='same',
-        kernel_initializer=kernel_initializer(),
+        kernel_initializer=initializer,
         kernel_regularizer=regularizer)
     x = tf.layers.dropout(x, rate=dropout)
 
@@ -49,7 +46,7 @@ def bottleneck_composite_function(x,
         x,
         filters, (3, 3), (1, 1),
         padding='same',
-        kernel_initializer=kernel_initializer(),
+        kernel_initializer=initializer,
         kernel_regularizer=regularizer)
     x = tf.layers.dropout(x, rate=dropout)
 
@@ -61,6 +58,7 @@ def dense_block(x,
                 growth_rate,
                 bottleneck,
                 dropout,
+                initializer,
                 regularizer,
                 training,
                 name='dense_block'):
@@ -75,6 +73,7 @@ def dense_block(x,
             x,
             growth_rate,
             dropout=dropout,
+            initializer=initializer,
             regularizer=regularizer,
             training=training,
             name='bottleneck_composite_function_{}'.format(i))
@@ -83,6 +82,7 @@ def dense_block(x,
             x,
             growth_rate,
             dropout=dropout,
+            initializer=initializer,
             regularizer=regularizer,
             training=training,
             name='composite_function_{}'.format(i))
@@ -95,6 +95,7 @@ def dense_block(x,
 def transition_layer(x,
                      compression_factor,
                      dropout,
+                     initializer,
                      regularizer,
                      training,
                      name='transition_layer'):
@@ -106,7 +107,7 @@ def transition_layer(x,
         x,
         filters, (1, 1), (1, 1),
         padding='same',
-        kernel_initializer=kernel_initializer(),
+        kernel_initializer=initializer,
         kernel_regularizer=regularizer)
     x = tf.layers.dropout(x, rate=dropout)
     x = tf.layers.average_pooling2d(x, (2, 2), (2, 2), padding='same')
@@ -140,12 +141,15 @@ def densenet(x,
              bottleneck=True,
              training=False):
   with tf.name_scope('densenet'):
+    initializer = tf.contrib.layers.variance_scaling_initializer(
+        factor=2.0, mode='FAN_IN', uniform=False)
     regularizer = tf.contrib.layers.l2_regularizer(scale=weight_decay)
 
     if bottleneck and compression_factor < 1:
-      x = input(x, growth_rate * 2, regularizer=regularizer)
+      x = input(
+          x, growth_rate * 2, initializer=initializer, regularizer=regularizer)
     else:
-      x = input(x, 16, regularizer=regularizer)
+      x = input(x, 16, initializer=initializer, regularizer=regularizer)
 
     x = dense_block(
         x,
@@ -153,6 +157,7 @@ def densenet(x,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
         dropout=dropout,
+        initializer=initializer,
         regularizer=regularizer,
         training=training,
         name='dense_block_1')
@@ -160,6 +165,7 @@ def densenet(x,
         x,
         compression_factor=compression_factor,
         dropout=dropout,
+        initializer=initializer,
         regularizer=regularizer,
         training=training,
         name='transition_layer_1')
@@ -169,6 +175,7 @@ def densenet(x,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
         dropout=dropout,
+        initializer=initializer,
         regularizer=regularizer,
         training=training,
         name='dense_block_2')
@@ -176,6 +183,7 @@ def densenet(x,
         x,
         compression_factor=compression_factor,
         dropout=dropout,
+        initializer=initializer,
         regularizer=regularizer,
         training=training,
         name='transition_layer_2')
@@ -185,10 +193,11 @@ def densenet(x,
         growth_rate=growth_rate,
         bottleneck=bottleneck,
         dropout=dropout,
+        initializer=initializer,
         regularizer=regularizer,
         training=training,
         name='dense_block_3')
 
-    x = output(x, regularizer=regularizer)
+    x = output(x, initializer=initializer, regularizer=regularizer)
 
     return x
