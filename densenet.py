@@ -115,19 +115,31 @@ def transition_layer(x,
     return x
 
 
-def input(x, filters, regularizer, name='input'):
+def input(x, filters, initializer, regularizer, name='input'):
   with tf.name_scope(name):
     x = tf.layers.conv2d(
-        x, filters, 3, 1, padding='same', kernel_regularizer=regularizer)
+        x,
+        filters,
+        3,
+        1,
+        padding='same',
+        kernel_initializer=initializer,
+        kernel_regularizer=regularizer)
 
     return x
 
 
-def output(x, regularizer, name='output'):
+def output(x, initializer, regularizer, name='output'):
   with tf.name_scope(name):
     x = tf.reduce_mean(x, (1, 2), keep_dims=True)
     x = tf.layers.conv2d(
-        x, 1000, 1, 1, padding='same', kernel_regularizer=regularizer)
+        x,
+        1000,
+        1,
+        1,
+        padding='same',
+        kernel_initializer=initializer,
+        kernel_regularizer=regularizer)
 
     return x
 
