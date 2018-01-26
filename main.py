@@ -61,22 +61,24 @@ def main():
       global_step=global_step,
   )
 
+  locals_init = tf.local_variables_initializer()
+
+  train_init = tf.group(
+      training.assign(True),
+      iter.make_initializer(train_ds),
+      locals_init,
+  )
+  test_init = tf.group(
+      training.assign(False),
+      iter.make_initializer(test_ds),
+      locals_init,
+  )
+
   with tf.name_scope('summary'):
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('accuracy', accuracy)
   merged = tf.summary.merge_all()
   saver = tf.train.Saver()
-
-  train_init = tf.group(
-      training.assign(True),
-      iter.make_initializer(train_ds),
-      tf.local_variables_initializer(),
-  )
-  test_init = tf.group(
-      training.assign(False),
-      iter.make_initializer(test_ds),
-      tf.local_variables_initializer(),
-  )
 
   with tf.Session() as sess, tf.summary.FileWriter(
       os.path.join(args.log_path, 'train'),
@@ -99,7 +101,7 @@ def main():
         for _ in count():
           _, step = sess.run([(train_step, update_loss, update_accuracy),
                               global_step])
-          print(step, end='\r')
+          print(danger(step), end='\r')
       except tf.errors.OutOfRangeError:
         pass
 
