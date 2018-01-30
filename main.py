@@ -22,13 +22,11 @@ def make_parser():
   parser.add_argument('--dropout', type=float, default=0.2)
   parser.add_argument('--block-depth', type=int, default=10)
   parser.add_argument('--weight-decay', type=float, default=1e-4)
+  parser.add_argument('--hard-negatives', type=int)
   return parser
 
 
 def main():
-  # TODO: should not increment global_step on test set
-  # TODO: weight decay
-
   args = make_parser().parse_args()
   log_args(args)
 
@@ -58,7 +56,7 @@ def main():
   update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
   with tf.control_dependencies(update_ops):
     train_step = tf.train.AdamOptimizer(args.learning_rate).minimize(
-        objectives.loss(logits=logits, labels=y) +
+        objectives.loss(logits=logits, labels=y, top_k=args.hard_negatives) +
         tf.losses.get_regularization_loss(),
         global_step=global_step,
     )
