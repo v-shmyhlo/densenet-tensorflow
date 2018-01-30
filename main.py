@@ -22,6 +22,7 @@ def make_parser():
   parser.add_argument('--dropout', type=float, default=0.2)
   parser.add_argument('--block-depth', type=int, default=10)
   parser.add_argument('--weight-decay', type=float, default=1e-4)
+  parser.add_argument('--shuffle', type=int, default=1024)
   parser.add_argument('--hard-negatives', type=int)
   return parser
 
@@ -35,7 +36,7 @@ def main():
 
   with tf.name_scope('data_loading'):
     train_ds, test_ds = cifar10.make_dataset(args.dataset_path)
-    train_ds, test_ds = (train_ds.shuffle(1024).batch(args.batch_size),
+    train_ds, test_ds = (train_ds.shuffle(args.shuffle).batch(args.batch_size),
                          test_ds.batch(args.batch_size))
 
   iter = tf.data.Iterator.from_structure((tf.float32, tf.int64),
