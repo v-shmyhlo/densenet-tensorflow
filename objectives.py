@@ -7,6 +7,6 @@ def loss(logits, labels, top_k):
       logits=logits, labels=labels)
 
   if top_k is not None:
-    loss = tf.nn.top_k(loss, top_k)
+    loss, _ = tf.nn.top_k(loss, top_k)
 
   return tf.reduce_mean(loss)
