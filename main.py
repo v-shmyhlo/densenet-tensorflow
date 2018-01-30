@@ -35,7 +35,7 @@ def main():
 
   with tf.name_scope('data_loading'):
     train_ds, test_ds = cifar10.make_dataset(args.dataset_path)
-    train_ds, test_ds = (train_ds.batch(args.batch_size),
+    train_ds, test_ds = (train_ds.shuffle(1024).batch(args.batch_size),
                          test_ds.batch(args.batch_size))
 
   iter = tf.data.Iterator.from_structure((tf.float32, tf.int64),
