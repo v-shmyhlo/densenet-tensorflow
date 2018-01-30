@@ -55,11 +55,13 @@ def main():
   loss, update_loss = metrics.loss(logits=logits, labels=y)
   accuracy, update_accuracy = metrics.accuracy(logits=logits, labels=y)
 
-  train_step = tf.train.AdamOptimizer(args.learning_rate).minimize(
-      objectives.loss(logits=logits, labels=y) +
-      tf.losses.get_regularization_loss(),
-      global_step=global_step,
-  )
+  update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+  with tf.control_dependencies(update_ops):
+    train_step = tf.train.AdamOptimizer(args.learning_rate).minimize(
+        objectives.loss(logits=logits, labels=y) +
+        tf.losses.get_regularization_loss(),
+        global_step=global_step,
+    )
 
   locals_init = tf.local_variables_initializer()
 

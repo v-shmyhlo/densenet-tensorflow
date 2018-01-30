@@ -15,5 +15,5 @@ def danger(str):
 
 def log_args(args):
   print(warning('arguments:'))
-  for key, value in vars(args).items():
+  for key, value in sorted(vars(args).items(), key=lambda kv: kv[0]):
     print(warning('\t{}:').format(key), value)
