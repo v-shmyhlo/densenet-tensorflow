@@ -14,7 +14,7 @@ def preprocessing(data, labels):
     data = tf.reshape(data, (3, 32 * 32))
     data = tf.transpose(data)
     data = tf.reshape(data, (32, 32, 3))
-    data /= 255  # TODO: covert image dtype
+    data = tf.image.convert_image_dtype(data)
 
     labels = tf.to_int64(labels)
 
@@ -35,8 +35,7 @@ def make_dataset(path):
     train_ds = tf.data.Dataset.from_tensor_slices((train_data_batches,
                                                    train_labels_batches))
     train_ds = train_ds.flat_map(
-        lambda data, labels: tf.data.Dataset.from_tensor_slices((data, labels))
-    )
+        lambda data, labels: tf.data.Dataset.from_tensor_slices((data, labels)))
 
     test_data, test_labels = load_file(os.path.join(path, 'test_batch'))
     test_ds = tf.data.Dataset.from_tensor_slices((test_data, test_labels))

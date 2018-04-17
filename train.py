@@ -101,7 +101,6 @@ def main():
 
         for epoch in range(args.epochs):
             sess.run(train_init)
-
             for _ in tqdm(count(), desc='training'):
                 try:
                     _, step = sess.run([(train_step, update_loss, update_accuracy), global_step])
