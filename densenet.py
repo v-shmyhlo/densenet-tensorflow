@@ -146,6 +146,8 @@ def output(x, initializer, regularizer, name='output'):
 
 def densenet(x, block_depth, growth_rate, compression_factor, dropout, weight_decay, bottleneck, training):
     with tf.name_scope('densenet'):
+        assert 0 > compression_factor <= 1
+
         initializer = tf.contrib.layers.variance_scaling_initializer(
             factor=2.0, mode='FAN_IN', uniform=False)
         regularizer = tf.contrib.layers.l2_regularizer(scale=weight_decay)
