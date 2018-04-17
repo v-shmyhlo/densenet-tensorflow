@@ -4,9 +4,11 @@ from itertools import count
 import tensorflow as tf
 import densenet
 import cifar10_dataset as cifar10
-from utils import success, warning, danger, log_args
+from utils import success, warning, log_args
 import metrics
 import objectives
+from tqdm import tqdm
+
 
 # TODO: assert compression_factor
 # TODO: add focal loss
@@ -42,8 +44,7 @@ def main():
         train_ds, test_ds = (train_ds.shuffle(args.shuffle).batch(
             args.batch_size), test_ds.batch(args.batch_size))
 
-    iter = tf.data.Iterator.from_structure((tf.float32, tf.int64),
-                                           ((None, 32, 32, 3), (None)))
+    iter = tf.data.Iterator.from_structure((tf.float32, tf.int64), ((None, 32, 32, 3), (None)))
 
     x, y = iter.get_next()
     logits = densenet.densenet(
@@ -59,24 +60,21 @@ def main():
 
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
-        train_step = tf.train.AdamOptimizer(args.learning_rate).minimize(
-            objectives.loss(
-                logits=logits, labels=y, top_k=args.hard_negatives) +
-            tf.losses.get_regularization_loss(),
-            global_step=global_step,
-        )
+        class_loss = objectives.loss(logits=logits, labels=y, top_k=args.hard_negatives)
+        reg_loss = tf.losses.get_regularization_loss()
+        train_step = tf.train.AdamOptimizer(args.learning_rate).minimize(class_loss + reg_loss, global_step=global_step)
 
     locals_init = tf.local_variables_initializer()
 
     train_init = tf.group(
         training.assign(True),
         iter.make_initializer(train_ds),
-        locals_init,
+        locals_init
     )
     test_init = tf.group(
         training.assign(False),
         iter.make_initializer(test_ds),
-        locals_init,
+        locals_init
     )
 
     with tf.name_scope('summary'):
@@ -87,10 +85,10 @@ def main():
 
     with tf.Session() as sess, tf.summary.FileWriter(
             os.path.join(args.experiment_path, 'train'),
-            sess.graph,
+            sess.graph
     ) as train_writer, tf.summary.FileWriter(
-            os.path.join(args.experiment_path, 'test'),
-            sess.graph,
+        os.path.join(args.experiment_path, 'test'),
+        sess.graph
     ) as test_writer:
         restore_path = tf.train.latest_checkpoint(args.experiment_path)
         if restore_path:
@@ -102,43 +100,33 @@ def main():
 
         for epoch in range(args.epochs):
             sess.run(train_init)
-            try:
-                for _ in count():
-                    _, step = sess.run([(train_step, update_loss,
-                                         update_accuracy), global_step])
-                    print(danger(step), end='\r')
-            except tf.errors.OutOfRangeError:
-                pass
+
+            for _ in tqdm(count(), desc='training'):
+                try:
+                    _, step = sess.run([(train_step, update_loss, update_accuracy), global_step])
+                except tf.errors.OutOfRangeError:
+                    break
 
             print(success('epoch: {}, step: {}'.format(epoch, step)))
 
             l, a, summary = sess.run([loss, accuracy, merged])
-            print(
-                success('(train) loss: {:.4f}, accuracy: {:.2f}'.format(
-                    l, a * 100)))
+            print(success('(train) loss: {:.4f}, accuracy: {:.2f}'.format(l, a * 100)))
             train_writer.add_summary(summary, step)
             train_writer.flush()
 
             sess.run(test_init)
-            try:
-                for _ in count():
-                    _, step = sess.run([(update_loss, update_accuracy),
-                                        global_step])
-                    print(danger(step), end='\r')
-            except tf.errors.OutOfRangeError:
-                pass
+            for _ in tqdm(count(), desc='evaluation'):
+                try:
+                    _, step = sess.run([(update_loss, update_accuracy), global_step])
+                except tf.errors.OutOfRangeError:
+                    break
 
             l, a, summary = sess.run([loss, accuracy, merged])
-            print(
-                success('(test) loss: {:.4f}, accuracy: {:.2f}'.format(
-                    l, a * 100)))
+            print(success('(test) loss: {:.4f}, accuracy: {:.2f}'.format(l, a * 100)))
             test_writer.add_summary(summary, step)
             test_writer.flush()
 
-            save_path = saver.save(
-                sess,
-                os.path.join(args.experiment_path, 'model.ckpt'),
-                write_meta_graph=False)
+            save_path = saver.save(sess, os.path.join(args.experiment_path, 'model.ckpt'))
             print(warning('model saved: {}'.format(save_path)))
 
 
