@@ -20,8 +20,7 @@ def make_parser():
     parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--compression-factor', type=float, default=0.5)
     parser.add_argument('--learning-rate', type=float, default=1e-3)
-    parser.add_argument('--log-path', type=str, default='./tf_log')
-    parser.add_argument('--save-path', type=str, default='./weights')
+    parser.add_argument('--experiment-path', type=str, required=True)
     parser.add_argument('--dropout', type=float, default=0.2)
     parser.add_argument('--block-depth', type=int, default=10)
     parser.add_argument('--weight-decay', type=float, default=1e-4)
@@ -87,13 +86,13 @@ def main():
     saver = tf.train.Saver()
 
     with tf.Session() as sess, tf.summary.FileWriter(
-            os.path.join(args.log_path, 'train'),
+            os.path.join(args.experiment_path, 'train'),
             sess.graph,
     ) as train_writer, tf.summary.FileWriter(
-            os.path.join(args.log_path, 'test'),
+            os.path.join(args.experiment_path, 'test'),
             sess.graph,
     ) as test_writer:
-        restore_path = tf.train.latest_checkpoint(args.save_path)
+        restore_path = tf.train.latest_checkpoint(args.experiment_path)
         if restore_path:
             print(warning('Restoring from checkpoint'))
             saver.restore(sess, restore_path)
@@ -138,7 +137,7 @@ def main():
 
             save_path = saver.save(
                 sess,
-                os.path.join(args.save_path, 'model.ckpt'),
+                os.path.join(args.experiment_path, 'model.ckpt'),
                 write_meta_graph=False)
             print(warning('model saved: {}'.format(save_path)))
 
