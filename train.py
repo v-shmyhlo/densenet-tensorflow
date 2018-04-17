@@ -17,7 +17,7 @@ def make_parser():
     parser.add_argument('--dataset-path', type=str, required=True)
     parser.add_argument('--batch-size', type=int, default=32)
     parser.add_argument('--growth-rate', type=int, default=12)
-    parser.add_argument('--epochs', type=int, default=10)
+    parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--compression-factor', type=float, default=0.5)
     parser.add_argument('--learning-rate', type=float, default=1e-3)
     parser.add_argument('--experiment-path', type=str, required=True)

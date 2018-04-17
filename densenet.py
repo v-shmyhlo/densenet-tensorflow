@@ -144,14 +144,7 @@ def output(x, initializer, regularizer, name='output'):
         return x
 
 
-def densenet(x,
-             block_depth,
-             growth_rate,
-             compression_factor,
-             dropout,
-             weight_decay,
-             bottleneck=True,
-             training=False):
+def densenet(x, block_depth, growth_rate, compression_factor, dropout, weight_decay, bottleneck, training):
     with tf.name_scope('densenet'):
         initializer = tf.contrib.layers.variance_scaling_initializer(
             factor=2.0, mode='FAN_IN', uniform=False)
