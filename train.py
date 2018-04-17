@@ -52,6 +52,7 @@ def main():
         block_depth=args.block_depth,
         growth_rate=args.growth_rate,
         compression_factor=args.compression_factor,
+        bottleneck=True,
         dropout=args.dropout,
         weight_decay=args.weight_decay,
         training=training)
