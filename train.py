@@ -11,8 +11,8 @@ from tqdm import tqdm
 
 
 # TODO: assert compression_factor
-# TODO: add focal loss
-
+# TODO: try focal loss
+# TODO: add ability to download dataset
 
 def make_parser():
     parser = argparse.ArgumentParser()
